@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRPay — Instant QR Payment Links for GCash & Maya</title>
+    <meta name="description" content="Create shareable payment links with your GCash or Maya QR code. Accept payments instantly with proof upload and admin verification.">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        /* Landing-specific styles */
+        .hero {
+            min-height: calc(100vh - 60px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+            bottom: -150px;
+            left: -150px;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 700px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 50px;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.8125rem;
+            color: var(--neon-blue);
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-title .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .features {
+            padding: 5rem 1.5rem;
+        }
+
+        .features-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .features-title h2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .features-title p {
+            color: var(--text-secondary);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            transition: all var(--transition-normal);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59, 130, 246, 0.2);
+            box-shadow: var(--shadow-glow-blue);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .how-it-works {
+            padding: 5rem 1.5rem;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 3rem auto 0;
+        }
+
+        .hiw-step {
+            text-align: center;
+            position: relative;
+        }
+
+        .hiw-step::after {
+            content: '→';
+            position: absolute;
+            right: -1.25rem;
+            top: 1.5rem;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+        }
+
+        .hiw-step:last-child::after {
+            display: none;
+        }
+
+        .hiw-step-num {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+
+        .hiw-step h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .hiw-step p {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        .cta-section {
+            padding: 5rem 1.5rem;
+            text-align: center;
+        }
+
+        .cta-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-xl);
+            padding: 4rem 2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+        }
+
+        footer {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            border-top: 1px solid var(--border-glass);
+            color: var(--text-muted);
+            font-size: 0.8125rem;
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            animation: float var(--duration) var(--delay) ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            50% { transform: translateY(-100vh) translateX(30px); }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.25rem; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .steps-grid { grid-template-columns: 1fr 1fr; }
+            .hiw-step::after { display: none; }
+        }
+
+        @media (max-width: 480px) {
+            .steps-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">
+                <div class="navbar-brand-icon">💳</div>
+                <span>QRPay</span>
+            </a>
+            <div class="navbar-actions">
+                <a href="/login" class="btn btn-ghost btn-sm" id="navLoginBtn">Login</a>
+                <a href="/dashboard" class="btn btn-primary btn-sm" id="navDashBtn" style="display:none">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span>🇵🇭</span>
+                <span>Built for Filipino businesses</span>
+            </div>
+            <h1 class="hero-title">
+                Accept Payments via<br>
+                <span class="gradient-text">GCash & Maya</span><br>
+                Instantly
+            </h1>
+            <p class="hero-subtitle">
+                Upload your QR code, create shareable payment links, and let customers pay you directly. No API needed — just scan, pay, and upload proof.
+            </p>
+            <div class="hero-buttons">
+                <a href="/dashboard" class="btn btn-primary btn-lg">
+                    🚀 Get Started Free
+                </a>
+                <a href="#how-it-works" class="btn btn-ghost btn-lg">
+                    How It Works →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="features-title">
+            <h2>Everything You Need</h2>
+            <p>Powerful features to manage your payments effortlessly</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>QR Code Manager</h3>
+                <p>Upload and manage your GCash & Maya QR codes. Switch between wallets anytime.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3>Payment Links</h3>
+                <p>Generate unique, shareable payment links with custom amounts or let payers choose.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📸</div>
+                <h3>Proof Upload</h3>
+                <p>Users upload payment screenshots. Drag & drop with image preview.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✅</div>
+                <h3>Admin Verification</h3>
+                <p>Review and approve/reject payments. Full control over every transaction.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Analytics Dashboard</h3>
+                <p>Track revenue, view transaction history, and monitor payment trends.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure System</h3>
+                <p>JWT authentication, file validation, rate limiting, and secure storage.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="features-title">
+            <h2>How It Works</h2>
+            <p>Get paid in 4 simple steps</p>
+        </div>
+        <div class="steps-grid">
+            <div class="hiw-step">
+                <div class="hiw-step-num">1</div>
+                <h4>Upload QR</h4>
+                <p>Upload your GCash or Maya QR code to the system</p>
+            </div>
+            <div class="hiw-step">
+                <div class="hiw-step-num">2</div>
+                <h4>Create Link</h4>
+                <p>Generate a payment link with your desired amount</p>
+            </div>
+            <div class="hiw-step">
+                <div class="hiw-step-num">3</div>
+                <h4>Share & Pay</h4>
+                <p>Share the link — user scans QR and pays you</p>
+            </div>
+            <div class="hiw-step">
+                <div class="hiw-step-num">4</div>
+                <h4>Verify</h4>
+                <p>User uploads proof, you approve — done!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="cta-card">
+            <h2>Ready to Accept Payments?</h2>
+            <p class="text-secondary mt-1 mb-3" style="max-width:400px;margin-left:auto;margin-right:auto">
+                Start creating payment links in seconds. No setup fees, no monthly charges.
+            </p>
+            <a href="/dashboard" class="btn btn-primary btn-lg">
+                🚀 Start Now — It's Free
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 QRPay — Built with ❤️ for Filipino entrepreneurs</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script>
+        // Check auth state for nav
+        if (api.isAuthenticated()) {
+            document.getElementById('navLoginBtn').style.display = 'none';
+            document.getElementById('navDashBtn').style.display = '';
+        }
+
+        // Create floating particles
+        const particlesEl = document.getElementById('particles');
+        for (let i = 0; i < 15; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = `${Math.random() * 100}%`;
+            p.style.top = `${Math.random() * 100}%`;
+            p.style.setProperty('--duration', `${8 + Math.random() * 12}s`);
+            p.style.setProperty('--delay', `${Math.random() * 5}s`);
+            p.style.width = `${2 + Math.random() * 4}px`;
+            p.style.height = p.style.width;
+            particlesEl.appendChild(p);
+        }
+
+        // GSAP animations
+        gsap.from('.hero-badge', { opacity: 0, y: 20, duration: 0.6, delay: 0.2 });
+        gsap.from('.hero-title', { opacity: 0, y: 30, duration: 0.8, delay: 0.4 });
+        gsap.from('.hero-subtitle', { opacity: 0, y: 20, duration: 0.6, delay: 0.7 });
+        gsap.from('.hero-buttons', { opacity: 0, y: 20, duration: 0.6, delay: 0.9 });
+
+        gsap.from('.feature-card', {
+            scrollTrigger: '.feature-card',
+            opacity: 0,
+            y: 40,
+            duration: 0.6,
+            stagger: 0.1,
+            delay: 0.2,
+        });
+
+        gsap.from('.hiw-step', {
+            scrollTrigger: '.hiw-step',
+            opacity: 0,
+            y: 30,
+            duration: 0.5,
+            stagger: 0.15,
+            delay: 0.3,
+        });
+    </script>
+</body>
+</html>

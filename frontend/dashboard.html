@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — QRPay</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .dashboard-body { padding: 2rem 0; }
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .page-header h1 { font-size: 1.75rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .section-header h2 { font-size: 1.25rem; }
+        .filter-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 0.375rem 0.875rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid var(--border-glass);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-family: var(--font-family);
+        }
+        .filter-btn:hover { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .filter-btn.active { background: var(--gradient-primary); border-color: transparent; color: white; }
+        .wallet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+        .wallet-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            transition: all var(--transition-normal);
+        }
+        .wallet-card:hover { border-color: rgba(255, 255, 255, 0.15); }
+        .wallet-qr {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .wallet-qr img {
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 4px;
+        }
+        .wallet-info h4 { margin-bottom: 0.25rem; }
+        .wallet-info .detail { font-size: 0.8125rem; color: var(--text-secondary); }
+        .wallet-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+        .link-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 0.75rem;
+            transition: all var(--transition-normal);
+        }
+        .link-card:hover { border-color: rgba(255, 255, 255, 0.15); }
+        .link-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+        .link-card-title { font-size: 1rem; font-weight: 600; }
+        .link-card-meta { font-size: 0.8125rem; color: var(--text-secondary); display: flex; gap: 1rem; flex-wrap: wrap; }
+        .link-card-amount { font-size: 1.25rem; font-weight: 700; color: var(--neon-green); }
+        .link-card-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+        .txn-row { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-bottom: 1px solid var(--border-color); }
+        .txn-row:last-child { border-bottom: none; }
+        .txn-sender { font-weight: 600; font-size: 0.9375rem; }
+        .txn-amount { font-weight: 700; font-size: 1.0625rem; }
+        .txn-detail { font-size: 0.8125rem; color: var(--text-secondary); }
+        .txn-actions { margin-left: auto; display: flex; gap: 0.5rem; flex-shrink: 0; }
+        .proof-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+            cursor: pointer;
+            border: 1px solid var(--border-glass);
+            transition: transform var(--transition-fast);
+        }
+        .proof-thumb:hover { transform: scale(1.1); }
+        .pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-glass);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-size: 0.8125rem;
+            transition: all var(--transition-fast);
+        }
+        .pagination button:hover:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
+        @media (max-width: 640px) {
+            .txn-row { flex-wrap: wrap; }
+            .txn-actions { margin-left: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">
+                <div class="navbar-brand-icon">💳</div>
+                <span>QRPay</span>
+            </a>
+            <div class="navbar-actions">
+                <span class="text-sm text-secondary" id="userEmail"></span>
+                <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="container dashboard-body">
+        <!-- Header -->
+        <div class="page-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p class="text-secondary text-sm mt-1">Manage your payments and QR wallets</p>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card blue">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="statRevenue">₱0</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="statApproved">0</div>
+                <div class="stat-label">Approved</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-value" id="statPending">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-icon">🔗</div>
+                <div class="stat-value" id="statLinks">0</div>
+                <div class="stat-label">Active Links</div>
+            </div>
+        </div>
+
+        <!-- Revenue Chart -->
+        <div class="glass-card-static mb-3">
+            <h3 class="mb-2">Revenue (Last 7 Days)</h3>
+            <div class="chart-container" id="revenueChart"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs mb-3" id="mainTabs">
+            <button class="tab-btn active" data-tab="tab-transactions">📋 Transactions</button>
+            <button class="tab-btn" data-tab="tab-links">🔗 Payment Links</button>
+            <button class="tab-btn" data-tab="tab-wallets">📱 QR Wallets</button>
+        </div>
+
+        <!-- Tab: Transactions -->
+        <div class="tab-content active" id="tab-transactions">
+            <div class="section-header">
+                <h2>Transactions</h2>
+                <div class="filter-group" id="txnFilters">
+                    <button class="filter-btn active" data-status="">All</button>
+                    <button class="filter-btn" data-status="pending">Pending</button>
+                    <button class="filter-btn" data-status="approved">Approved</button>
+                    <button class="filter-btn" data-status="rejected">Rejected</button>
+                </div>
+            </div>
+            <div class="glass-card-static" id="txnList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <p>No transactions yet</p>
+                </div>
+            </div>
+            <div class="pagination" id="txnPagination"></div>
+        </div>
+
+        <!-- Tab: Payment Links -->
+        <div class="tab-content" id="tab-links">
+            <div class="section-header">
+                <h2>Payment Links</h2>
+                <button class="btn btn-primary btn-sm" onclick="openModal('createLinkModal')">+ Create Link</button>
+            </div>
+            <div id="linksList"></div>
+            <div class="pagination" id="linksPagination"></div>
+        </div>
+
+        <!-- Tab: QR Wallets -->
+        <div class="tab-content" id="tab-wallets">
+            <div class="section-header">
+                <h2>QR Wallets</h2>
+                <button class="btn btn-primary btn-sm" onclick="openModal('createWalletModal')">+ Add Wallet</button>
+            </div>
+            <div class="wallet-grid" id="walletGrid"></div>
+        </div>
+    </div>
+
+    <!-- ═══ CREATE WALLET MODAL ═══ -->
+    <div class="modal-overlay" id="createWalletModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add QR Wallet</h3>
+                <button class="modal-close" onclick="closeModal('createWalletModal')">✕</button>
+            </div>
+            <form id="walletForm">
+                <div class="form-group">
+                    <label class="form-label">Wallet Type</label>
+                    <select class="form-input" id="walletType" required>
+                        <option value="gcash">GCash</option>
+                        <option value="maya">Maya</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Wallet Name</label>
+                    <input type="text" class="form-input" id="walletName" placeholder="e.g. My GCash" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Account Name</label>
+                    <input type="text" class="form-input" id="walletAccName" placeholder="e.g. Juan Dela Cruz">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Account Number</label>
+                    <input type="text" class="form-input" id="walletAccNum" placeholder="e.g. 09171234567">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">QR Code Image</label>
+                    <div class="drop-zone" id="walletDropZone">
+                        <div class="drop-zone-icon">📷</div>
+                        <div class="drop-zone-text">Drop QR image here or click to upload</div>
+                        <div class="drop-zone-hint">PNG, JPG, WEBP — Max 3MB</div>
+                        <input type="file" accept="image/*" id="walletQrFile" required>
+                    </div>
+                    <div class="image-preview hidden mt-1" id="walletPreview">
+                        <img id="walletPreviewImg" src="" alt="QR Preview">
+                        <button type="button" class="remove-btn" onclick="clearWalletPreview()">✕</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="walletSubmitBtn">Add Wallet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══ CREATE PAYMENT LINK MODAL ═══ -->
+    <div class="modal-overlay" id="createLinkModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Create Payment Link</h3>
+                <button class="modal-close" onclick="closeModal('createLinkModal')">✕</button>
+            </div>
+            <form id="linkForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="linkTitle" placeholder="e.g. Boarding Fee" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description (optional)</label>
+                    <textarea class="form-input" id="linkDesc" placeholder="Payment details..." rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount (leave empty for any amount)</label>
+                    <input type="number" class="form-input" id="linkAmount" placeholder="e.g. 500" min="1" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">QR Wallet</label>
+                    <select class="form-input" id="linkWallet" required>
+                        <option value="">Select wallet...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expiration (optional)</label>
+                    <input type="datetime-local" class="form-input" id="linkExpires">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="linkSubmitBtn">Create Link</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══ VIEW TRANSACTION MODAL ═══ -->
+    <div class="modal-overlay" id="viewTxnModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Transaction Details</h3>
+                <button class="modal-close" onclick="closeModal('viewTxnModal')">✕</button>
+            </div>
+            <div id="txnDetailContent"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/utils.js"></script>
+    <script>
+        // ── Auth Guard ──
+        if (!api.isAuthenticated()) {
+            window.location.href = '/login';
+        }
+
+        const user = api.getUser();
+        if (user) {
+            document.getElementById('userEmail').textContent = user.email;
+        }
+
+        function logout() {
+            api.clearToken();
+            window.location.href = '/login';
+        }
+
+        // ── Init Tabs ──
+        initTabs(document.querySelector('.dashboard-body'));
+
+        // ── State ──
+        let currentTxnPage = 1;
+        let currentTxnFilter = '';
+        let currentLinksPage = 1;
+
+        // ══════════════════════════════════════════
+        // LOAD STATS
+        // ══════════════════════════════════════════
+        async function loadStats() {
+            try {
+                const data = await api.getStats();
+                document.getElementById('statRevenue').textContent = formatCurrency(data.total_revenue);
+                document.getElementById('statApproved').textContent = data.approved_transactions;
+                document.getElementById('statPending').textContent = data.pending_transactions;
+                document.getElementById('statLinks').textContent = data.active_links;
+
+                // Render revenue chart
+                renderChart(data.revenue_by_day);
+
+                // Animate stats
+                gsap.from('.stat-card', { opacity: 0, y: 20, duration: 0.5, stagger: 0.1 });
+            } catch (err) {
+                console.error('Stats error:', err);
+            }
+        }
+
+        function renderChart(days) {
+            const chart = document.getElementById('revenueChart');
+            const maxRev = Math.max(...days.map(d => d.revenue), 1);
+
+            chart.innerHTML = days.map(d => {
+                const height = Math.max((d.revenue / maxRev) * 100, 4);
+                const label = formatDateShort(d.date);
+                return `<div class="chart-bar" style="height:${height}%" data-label="${label}" title="${formatCurrency(d.revenue)}"></div>`;
+            }).join('');
+
+            gsap.from('.chart-bar', { height: 0, duration: 0.8, stagger: 0.1, ease: 'power2.out', delay: 0.3 });
+        }
+
+        // ══════════════════════════════════════════
+        // TRANSACTIONS
+        // ══════════════════════════════════════════
+        async function loadTransactions(page = 1, status = '') {
+            currentTxnPage = page;
+            currentTxnFilter = status;
+            const list = document.getElementById('txnList');
+
+            try {
+                const data = await api.getTransactions(page, status);
+
+                if (data.transactions.length === 0) {
+                    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📋</div><p>No transactions found</p></div>`;
+                    document.getElementById('txnPagination').innerHTML = '';
+                    return;
+                }
+
+                list.innerHTML = data.transactions.map(t => `
+                    <div class="txn-row fade-in">
+                        <div style="flex:1;min-width:0">
+                            <div class="txn-sender">${t.sender_name}</div>
+                            <div class="txn-detail">
+                                ${t.payment_link_title} · ${t.reference_number ? 'Ref: ' + t.reference_number : ''} · ${timeAgo(t.created_at)}
+                            </div>
+                        </div>
+                        <div class="txn-amount">${formatCurrency(t.amount_paid)}</div>
+                        ${getStatusBadge(t.status)}
+                        ${t.proofs && t.proofs.length > 0 ? t.proofs.map(p =>
+                            `<img src="${p.file_url}" class="proof-thumb" onclick="openLightbox('${p.file_url}')" alt="Proof">`
+                        ).join('') : ''}
+                        <div class="txn-actions">
+                            ${t.status === 'pending' ? `
+                                <button class="btn btn-success btn-sm" onclick="approveTxn(${t.id})">✅ Approve</button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectTxn(${t.id})">❌ Reject</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+                // Pagination
+                const pagEl = document.getElementById('txnPagination');
+                if (data.pages > 1) {
+                    pagEl.innerHTML = `
+                        <button onclick="loadTransactions(${page - 1}, '${status}')" ${page <= 1 ? 'disabled' : ''}>← Prev</button>
+                        <span class="text-sm text-secondary">Page ${page} of ${data.pages}</span>
+                        <button onclick="loadTransactions(${page + 1}, '${status}')" ${page >= data.pages ? 'disabled' : ''}>Next →</button>
+                    `;
+                } else {
+                    pagEl.innerHTML = '';
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Txn filters
+        document.getElementById('txnFilters').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('#txnFilters .filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                loadTransactions(1, e.target.dataset.status);
+            }
+        });
+
+        async function approveTxn(id) {
+            try {
+                await api.approveTransaction(id);
+                showToast('Transaction approved!', 'success');
+                loadTransactions(currentTxnPage, currentTxnFilter);
+                loadStats();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function rejectTxn(id) {
+            if (!confirm('Reject this transaction?')) return;
+            try {
+                await api.rejectTransaction(id);
+                showToast('Transaction rejected', 'warning');
+                loadTransactions(currentTxnPage, currentTxnFilter);
+                loadStats();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ══════════════════════════════════════════
+        // PAYMENT LINKS
+        // ══════════════════════════════════════════
+        async function loadPaymentLinks(page = 1) {
+            currentLinksPage = page;
+            const container = document.getElementById('linksList');
+
+            try {
+                const data = await api.getPaymentLinks(page);
+
+                if (data.payment_links.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔗</div><p>No payment links yet. Create one!</p></div>`;
+                    document.getElementById('linksPagination').innerHTML = '';
+                    return;
+                }
+
+                container.innerHTML = data.payment_links.map(link => {
+                    const url = getPaymentUrl(link.slug);
+                    return `
+                    <div class="link-card fade-in">
+                        <div class="link-card-header">
+                            <div>
+                                <div class="link-card-title">${link.title}</div>
+                                <div class="link-card-meta">
+                                    ${getStatusBadge(link.status)}
+                                    ${link.qr_wallet ? getWalletBadge(link.qr_wallet.wallet_type) : ''}
+                                    <span>${link.transaction_count} transactions</span>
+                                    <span>${timeAgo(link.created_at)}</span>
+                                </div>
+                            </div>
+                            <div class="link-card-amount">${formatCurrency(link.amount)}</div>
+                        </div>
+                        <div class="copy-url">
+                            <input type="text" value="${url}" readonly>
+                            <button class="btn btn-primary btn-sm" onclick="copyToClipboard('${url}')">📋 Copy</button>
+                        </div>
+                        <div class="link-card-actions">
+                            <a href="/pay/${link.slug}" target="_blank" class="btn btn-ghost btn-sm">🔗 Open</a>
+                            <button class="btn btn-ghost btn-sm" onclick="toggleLinkStatus(${link.id}, '${link.status}')">
+                                ${link.status === 'active' ? '⏸ Disable' : '▶ Enable'}
+                            </button>
+                            <button class="btn btn-ghost btn-sm text-danger" onclick="deleteLink(${link.id})">🗑 Delete</button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+
+                // Pagination
+                const pagEl = document.getElementById('linksPagination');
+                if (data.pages > 1) {
+                    pagEl.innerHTML = `
+                        <button onclick="loadPaymentLinks(${page - 1})" ${page <= 1 ? 'disabled' : ''}>← Prev</button>
+                        <span class="text-sm text-secondary">Page ${page} of ${data.pages}</span>
+                        <button onclick="loadPaymentLinks(${page + 1})" ${page >= data.pages ? 'disabled' : ''}>Next →</button>
+                    `;
+                } else {
+                    pagEl.innerHTML = '';
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function toggleLinkStatus(id, currentStatus) {
+            try {
+                const newStatus = currentStatus === 'active' ? 'disabled' : 'active';
+                await api.updatePaymentLink(id, { status: newStatus });
+                showToast(`Link ${newStatus}`, 'success');
+                loadPaymentLinks(currentLinksPage);
+                loadStats();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function deleteLink(id) {
+            if (!confirm('Delete this payment link? This cannot be undone.')) return;
+            try {
+                await api.deletePaymentLink(id);
+                showToast('Payment link deleted', 'success');
+                loadPaymentLinks(currentLinksPage);
+                loadStats();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Create Payment Link Form
+        document.getElementById('linkForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('linkSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Creating...';
+
+            try {
+                const data = {
+                    title: document.getElementById('linkTitle').value.trim(),
+                    description: document.getElementById('linkDesc').value.trim(),
+                    amount: document.getElementById('linkAmount').value || null,
+                    qr_wallet_id: parseInt(document.getElementById('linkWallet').value),
+                    expires_at: document.getElementById('linkExpires').value || null,
+                };
+
+                const result = await api.createPaymentLink(data);
+                showToast('Payment link created!', 'success');
+                closeModal('createLinkModal');
+                e.target.reset();
+                loadPaymentLinks();
+                loadStats();
+
+                // Copy the URL
+                const url = getPaymentUrl(result.payment_link.slug);
+                copyToClipboard(url);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Create Link';
+            }
+        });
+
+        // ══════════════════════════════════════════
+        // QR WALLETS
+        // ══════════════════════════════════════════
+        async function loadWallets() {
+            const grid = document.getElementById('walletGrid');
+            try {
+                const data = await api.getQrWallets();
+                if (data.qr_wallets.length === 0) {
+                    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📱</div><p>No QR wallets yet. Add one!</p></div>`;
+                    return;
+                }
+
+                grid.innerHTML = data.qr_wallets.map(w => `
+                    <div class="wallet-card fade-in">
+                        <div class="wallet-qr">
+                            <img src="${w.qr_image_path}" alt="${w.name} QR" onclick="openLightbox('${w.qr_image_path}')">
+                        </div>
+                        <div class="wallet-info">
+                            <div class="flex items-center gap-sm mb-1">
+                                <h4>${w.name}</h4>
+                                ${getWalletBadge(w.wallet_type)}
+                                ${w.is_active ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-disabled">Disabled</span>'}
+                            </div>
+                            <div class="detail">${w.account_name || '—'}</div>
+                            <div class="detail">${w.account_number || '—'}</div>
+                        </div>
+                        <div class="wallet-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="deleteWallet(${w.id})">🗑 Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Also populate link form wallet dropdown
+                populateWalletDropdown(data.qr_wallets);
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function populateWalletDropdown(wallets) {
+            const select = document.getElementById('linkWallet');
+            select.innerHTML = '<option value="">Select wallet...</option>';
+            wallets.filter(w => w.is_active).forEach(w => {
+                select.innerHTML += `<option value="${w.id}">${w.name} (${w.wallet_type})</option>`;
+            });
+        }
+
+        async function deleteWallet(id) {
+            if (!confirm('Delete this QR wallet?')) return;
+            try {
+                await api.deleteQrWallet(id);
+                showToast('Wallet deleted', 'success');
+                loadWallets();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // ── Wallet Form ──
+        const walletDropZone = document.getElementById('walletDropZone');
+        const walletFileInput = document.getElementById('walletQrFile');
+        const walletPreview = document.getElementById('walletPreview');
+        const walletPreviewImg = document.getElementById('walletPreviewImg');
+
+        walletDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            walletDropZone.classList.add('dragover');
+        });
+        walletDropZone.addEventListener('dragleave', () => walletDropZone.classList.remove('dragover'));
+        walletDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            walletDropZone.classList.remove('dragover');
+            if (e.dataTransfer.files[0]) {
+                walletFileInput.files = e.dataTransfer.files;
+                previewWalletFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        walletFileInput.addEventListener('change', () => {
+            if (walletFileInput.files[0]) {
+                previewWalletFile(walletFileInput.files[0]);
+            }
+        });
+
+        function previewWalletFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                walletPreviewImg.src = e.target.result;
+                walletPreview.classList.remove('hidden');
+                walletDropZone.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearWalletPreview() {
+            walletPreview.classList.add('hidden');
+            walletDropZone.classList.remove('hidden');
+            walletFileInput.value = '';
+        }
+
+        document.getElementById('walletForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('walletSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Uploading...';
+
+            try {
+                const formData = new FormData();
+                formData.append('name', document.getElementById('walletName').value.trim());
+                formData.append('wallet_type', document.getElementById('walletType').value);
+                formData.append('account_name', document.getElementById('walletAccName').value.trim());
+                formData.append('account_number', document.getElementById('walletAccNum').value.trim());
+                formData.append('qr_image', walletFileInput.files[0]);
+
+                await api.createQrWallet(formData);
+                showToast('QR Wallet added!', 'success');
+                closeModal('createWalletModal');
+                e.target.reset();
+                clearWalletPreview();
+                loadWallets();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Add Wallet';
+            }
+        });
+
+        // ══════════════════════════════════════════
+        // INIT
+        // ══════════════════════════════════════════
+        loadStats();
+        loadTransactions();
+        loadPaymentLinks();
+        loadWallets();
+
+        // GSAP entrance
+        gsap.from('.page-header', { opacity: 0, y: -20, duration: 0.5 });
+        gsap.from('.tabs', { opacity: 0, y: 10, duration: 0.4, delay: 0.2 });
+    </script>
+</body>
+</html>

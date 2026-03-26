@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay — QRPay</title>
+    <meta name="description" content="Complete your payment via GCash or Maya">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .payment-page {
+            min-height: 100vh;
+            padding: 2rem 1.5rem 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .payment-wrapper {
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .payment-brand {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .payment-brand a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        .payment-brand-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-main-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .payment-main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+        }
+
+        .payment-loading {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .payment-error {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .payment-error-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Step views */
+        .step-view { display: none; }
+        .step-view.active { display: block; }
+
+        /* QR Section */
+        .qr-section {
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .qr-frame {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            display: inline-block;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .qr-frame img {
+            max-width: 250px;
+            width: 100%;
+            display: block;
+            border-radius: var(--radius-sm);
+        }
+
+        .qr-wallet-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            padding: 0.375rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .wallet-details {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-glass);
+        }
+
+        .wallet-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            font-size: 0.875rem;
+        }
+
+        .wallet-detail-row .label {
+            color: var(--text-muted);
+        }
+
+        .wallet-detail-row .value {
+            font-weight: 600;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .instructions h4 {
+            font-size: 0.875rem;
+            color: var(--neon-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .instructions ol {
+            padding-left: 1.25rem;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* Proof upload */
+        .proof-section {
+            margin-top: 1.5rem;
+        }
+
+        .proof-drop-zone {
+            border: 2px dashed var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            position: relative;
+        }
+
+        .proof-drop-zone:hover,
+        .proof-drop-zone.dragover {
+            border-color: var(--neon-green);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .proof-drop-zone input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .proof-preview {
+            margin-top: 1rem;
+            position: relative;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border-glass);
+        }
+
+        .proof-preview img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            display: block;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .proof-preview .remove-preview {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.9);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--border-glass);
+            margin: 1.5rem 0;
+        }
+
+        /* Success state */
+        .success-view {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .success-check {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--gradient-success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.5rem;
+        }
+
+        .success-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 50px;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.875rem;
+            color: var(--neon-orange);
+            margin-top: 1rem;
+        }
+
+        .powered-by {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .powered-by a {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-page">
+        <div class="payment-wrapper">
+            <!-- Brand -->
+            <div class="payment-brand">
+                <a href="/">
+                    <div class="payment-brand-icon">💳</div>
+                    <span>QRPay</span>
+                </a>
+            </div>
+
+            <!-- Main Card -->
+            <div class="payment-main-card" id="paymentCard">
+                <!-- Loading -->
+                <div class="payment-loading" id="loadingView">
+                    <div class="spinner" style="width:40px;height:40px;border-width:3px;margin:0 auto"></div>
+                    <p class="text-secondary mt-2">Loading payment details...</p>
+                </div>
+
+                <!-- Error -->
+                <div class="payment-error hidden" id="errorView">
+                    <div class="payment-error-icon">😞</div>
+                    <h3 id="errorTitle">Oops!</h3>
+                    <p class="text-secondary mt-1" id="errorMessage">Something went wrong</p>
+                    <a href="/" class="btn btn-ghost mt-3">← Go Home</a>
+                </div>
+
+                <!-- Step 1: Scan & Pay -->
+                <div class="step-view" id="step1">
+                    <div class="payment-hero">
+                        <div class="payment-title" id="payTitle"></div>
+                        <div class="payment-amount" id="payAmount"></div>
+                        <p class="text-secondary text-sm" id="payDesc"></p>
+                    </div>
+
+                    <div class="qr-section">
+                        <div class="qr-frame" id="qrFrame">
+                            <img id="qrImage" src="" alt="QR Code">
+                            <span class="qr-wallet-badge badge" id="qrBadge"></span>
+                        </div>
+
+                        <div class="wallet-details" id="walletDetails">
+                            <div class="wallet-detail-row">
+                                <span class="label">Account Name</span>
+                                <span class="value" id="accName">—</span>
+                            </div>
+                            <div class="wallet-detail-row">
+                                <span class="label">Account Number</span>
+                                <span class="value" id="accNumber">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="instructions">
+                        <h4>📝 How to Pay</h4>
+                        <ol>
+                            <li>Open your <strong id="walletApp">GCash</strong> app</li>
+                            <li>Scan the QR code above</li>
+                            <li>Enter the exact amount shown</li>
+                            <li>Complete the payment</li>
+                            <li>Take a screenshot of the confirmation</li>
+                        </ol>
+                    </div>
+
+                    <button class="btn btn-success btn-block btn-lg" onclick="goToStep2()">
+                        ✅ I've Paid — Upload Proof
+                    </button>
+                </div>
+
+                <!-- Step 2: Submit Info -->
+                <div class="step-view" id="step2">
+                    <div class="steps mb-3">
+                        <div class="step completed"><div class="step-number">✓</div><span>Scan & Pay</span></div>
+                        <div class="step-divider"></div>
+                        <div class="step active"><div class="step-number">2</div><span>Submit Info</span></div>
+                        <div class="step-divider"></div>
+                        <div class="step"><div class="step-number">3</div><span>Upload Proof</span></div>
+                    </div>
+
+                    <h3 class="mb-2">Payment Details</h3>
+
+                    <form id="paymentForm">
+                        <div class="form-group">
+                            <label class="form-label">Your Name *</label>
+                            <input type="text" class="form-input" id="senderName" placeholder="e.g. Juan Dela Cruz" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contact Number or Email</label>
+                            <input type="text" class="form-input" id="senderContact" placeholder="e.g. 09171234567">
+                        </div>
+
+                        <div class="form-group" id="amountGroup">
+                            <label class="form-label">Amount Paid (₱) *</label>
+                            <input type="number" class="form-input" id="amountPaid" placeholder="e.g. 500" min="1" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">GCash/Maya Reference Number</label>
+                            <input type="text" class="form-input" id="refNumber" placeholder="e.g. 1234 5678 9012">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Notes (optional)</label>
+                            <textarea class="form-input" id="payNotes" rows="2" placeholder="Any additional notes..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitInfoBtn">
+                            Continue to Upload Proof →
+                        </button>
+                    </form>
+
+                    <button class="btn btn-ghost btn-block mt-2" onclick="goToStep1()">← Back</button>
+                </div>
+
+                <!-- Step 3: Upload Proof -->
+                <div class="step-view" id="step3">
+                    <div class="steps mb-3">
+                        <div class="step completed"><div class="step-number">✓</div><span>Scan & Pay</span></div>
+                        <div class="step-divider"></div>
+                        <div class="step completed"><div class="step-number">✓</div><span>Submit Info</span></div>
+                        <div class="step-divider"></div>
+                        <div class="step active"><div class="step-number">3</div><span>Upload Proof</span></div>
+                    </div>
+
+                    <h3 class="mb-2">Upload Payment Proof</h3>
+                    <p class="text-secondary text-sm mb-3">Upload a screenshot of your payment confirmation</p>
+
+                    <div class="proof-drop-zone" id="proofDropZone">
+                        <div class="drop-zone-icon">📸</div>
+                        <div class="drop-zone-text">Drop screenshot here or click to upload</div>
+                        <div class="drop-zone-hint">PNG, JPG, WEBP — Max 3MB</div>
+                        <input type="file" accept="image/*" id="proofFile">
+                    </div>
+
+                    <div class="proof-preview hidden" id="proofPreview">
+                        <img id="proofPreviewImg" src="" alt="Proof Preview">
+                        <button class="remove-preview" onclick="clearProof()">✕</button>
+                    </div>
+
+                    <button class="btn btn-success btn-block btn-lg mt-3" id="uploadProofBtn" disabled onclick="uploadProof()">
+                        ✅ Submit Payment
+                    </button>
+
+                    <button class="btn btn-ghost btn-block mt-2" onclick="showStep('step2')">← Back</button>
+                </div>
+
+                <!-- Step 4: Success -->
+                <div class="step-view" id="step4">
+                    <div class="success-view">
+                        <div class="success-check" id="successCheck">✓</div>
+                        <h2>Payment Submitted!</h2>
+                        <p class="text-secondary mt-1">Your payment proof has been sent for verification.</p>
+                        <div class="success-status">
+                            ⏳ Awaiting admin approval
+                        </div>
+                        <a href="/" class="btn btn-ghost mt-4">← Back to Home</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Powered by -->
+            <div class="powered-by">
+                Powered by <a href="/">QRPay</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/utils.js"></script>
+    <script>
+        // ── State ──
+        let paymentData = null;
+        let transactionId = null;
+        let proofFileData = null;
+
+        // Get slug from URL
+        const slug = window.location.pathname.split('/pay/')[1];
+
+        // ── Load Payment Link ──
+        async function loadPayment() {
+            try {
+                const data = await api.getPublicPaymentLink(slug);
+                paymentData = data;
+
+                const link = data.payment_link;
+                const wallet = data.qr_wallet;
+
+                // Populate UI
+                document.getElementById('payTitle').textContent = link.title;
+                document.getElementById('payDesc').textContent = link.description || '';
+                document.title = `Pay — ${link.title}`;
+
+                if (link.amount) {
+                    document.getElementById('payAmount').textContent = formatCurrency(link.amount);
+                    // Pre-fill and lock amount
+                    document.getElementById('amountPaid').value = link.amount;
+                    document.getElementById('amountPaid').readOnly = true;
+                    document.getElementById('amountGroup').querySelector('.form-label').textContent = 'Amount (₱)';
+                } else {
+                    document.getElementById('payAmount').textContent = 'Any Amount';
+                }
+
+                if (wallet) {
+                    document.getElementById('qrImage').src = wallet.qr_image_path;
+                    document.getElementById('accName').textContent = wallet.account_name || '—';
+                    document.getElementById('accNumber').textContent = wallet.account_number || '—';
+                    document.getElementById('walletApp').textContent = wallet.wallet_type === 'maya' ? 'Maya' : 'GCash';
+
+                    const badge = document.getElementById('qrBadge');
+                    badge.textContent = wallet.wallet_type === 'maya' ? 'Maya' : 'GCash';
+                    badge.classList.add(`badge-${wallet.wallet_type}`);
+                }
+
+                // Show step 1
+                document.getElementById('loadingView').classList.add('hidden');
+                showStep('step1');
+
+                // Animate
+                gsap.from('#step1', { opacity: 0, y: 20, duration: 0.6 });
+                gsap.from('.qr-frame', { scale: 0.8, opacity: 0, duration: 0.6, delay: 0.3 });
+
+            } catch (err) {
+                document.getElementById('loadingView').classList.add('hidden');
+                const errorView = document.getElementById('errorView');
+                errorView.classList.remove('hidden');
+
+                if (err.message.includes('no longer active') || err.message.includes('expired')) {
+                    document.getElementById('errorTitle').textContent = 'Link Expired';
+                    document.getElementById('errorMessage').textContent = 'This payment link is no longer active.';
+                } else if (err.message.includes('not found')) {
+                    document.getElementById('errorTitle').textContent = 'Not Found';
+                    document.getElementById('errorMessage').textContent = 'This payment link does not exist.';
+                } else {
+                    document.getElementById('errorMessage').textContent = err.message;
+                }
+            }
+        }
+
+        // ── Step Navigation ──
+        function showStep(stepId) {
+            document.querySelectorAll('.step-view').forEach(v => v.classList.remove('active'));
+            const step = document.getElementById(stepId);
+            if (step) {
+                step.classList.add('active');
+                gsap.from(step, { opacity: 0, y: 15, duration: 0.4 });
+            }
+        }
+
+        function goToStep1() {
+            showStep('step1');
+        }
+
+        function goToStep2() {
+            showStep('step2');
+        }
+
+        // ── Payment Form ──
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitInfoBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Submitting...';
+
+            try {
+                const data = {
+                    sender_name: document.getElementById('senderName').value.trim(),
+                    sender_contact: document.getElementById('senderContact').value.trim(),
+                    amount_paid: parseFloat(document.getElementById('amountPaid').value),
+                    reference_number: document.getElementById('refNumber').value.trim(),
+                    notes: document.getElementById('payNotes').value.trim(),
+                };
+
+                const result = await api.submitPayment(slug, data);
+                transactionId = result.transaction.id;
+
+                showToast('Info submitted! Now upload your proof.', 'success');
+                showStep('step3');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Continue to Upload Proof →';
+            }
+        });
+
+        // ── Proof Upload ──
+        const proofDropZone = document.getElementById('proofDropZone');
+        const proofFileInput = document.getElementById('proofFile');
+        const proofPreview = document.getElementById('proofPreview');
+        const proofPreviewImg = document.getElementById('proofPreviewImg');
+        const uploadBtn = document.getElementById('uploadProofBtn');
+
+        proofDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            proofDropZone.classList.add('dragover');
+        });
+        proofDropZone.addEventListener('dragleave', () => proofDropZone.classList.remove('dragover'));
+        proofDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            proofDropZone.classList.remove('dragover');
+            if (e.dataTransfer.files[0]) {
+                handleProofFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        proofFileInput.addEventListener('change', () => {
+            if (proofFileInput.files[0]) {
+                handleProofFile(proofFileInput.files[0]);
+            }
+        });
+
+        function handleProofFile(file) {
+            if (file.size > 3 * 1024 * 1024) {
+                showToast('File too large. Max 3MB.', 'error');
+                return;
+            }
+
+            proofFileData = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                proofPreviewImg.src = e.target.result;
+                proofPreview.classList.remove('hidden');
+                proofDropZone.classList.add('hidden');
+                uploadBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearProof() {
+            proofFileData = null;
+            proofPreview.classList.add('hidden');
+            proofDropZone.classList.remove('hidden');
+            proofFileInput.value = '';
+            uploadBtn.disabled = true;
+        }
+
+        async function uploadProof() {
+            if (!proofFileData || !transactionId) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="spinner"></span> Uploading...';
+
+            try {
+                await api.uploadProof(transactionId, proofFileData);
+                showToast('Payment proof uploaded!', 'success');
+                showStep('step4');
+
+                // Success animation
+                gsap.from('.success-check', { scale: 0, rotation: -180, duration: 0.6, ease: 'back.out(1.4)' });
+                gsap.from('.success-view h2', { opacity: 0, y: 20, duration: 0.4, delay: 0.3 });
+                gsap.from('.success-status', { opacity: 0, scale: 0.8, duration: 0.4, delay: 0.5 });
+            } catch (err) {
+                showToast(err.message, 'error');
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '✅ Submit Payment';
+            }
+        }
+
+        // ── Init ──
+        if (slug) {
+            loadPayment();
+        } else {
+            document.getElementById('loadingView').classList.add('hidden');
+            document.getElementById('errorView').classList.remove('hidden');
+            document.getElementById('errorTitle').textContent = 'Invalid Link';
+            document.getElementById('errorMessage').textContent = 'No payment link specified.';
+        }
+
+        // Card entrance animation
+        gsap.from('.payment-main-card', { opacity: 0, y: 30, duration: 0.5 });
+    </script>
+</body>
+</html>
