@@ -22,6 +22,7 @@
 
         body {
             font-family: var(--font-body);
+            background: #000000;
         }
 
         h1, h2, h3, h4, h5, h6,
@@ -243,7 +244,7 @@
             gap: 2.5rem;
             flex-wrap: wrap;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(8, 11, 22, 0.6);
+            background: rgba(0, 0, 0, 0.9);
         }
 
         .trust-item {
@@ -547,6 +548,125 @@
             color: var(--text-secondary);
         }
 
+        /* ── API Section ── */
+        .api-section {
+            padding: 6rem 1.5rem;
+            position: relative;
+        }
+
+        .api-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(139,92,246,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .api-layout {
+            max-width: 1080px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .api-code-block {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+        }
+
+        .api-code-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.25rem;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .api-code-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+        }
+
+        .api-code-pre {
+            padding: 1.5rem;
+            font-size: 0.8125rem;
+            line-height: 1.75;
+            color: #e2e8f0;
+            overflow-x: auto;
+        }
+
+        .api-t-comment { color: #4a5568; }
+        .api-t-key { color: #a78bfa; }
+        .api-t-str { color: #86efac; }
+        .api-t-num { color: #fdba74; }
+        .api-t-method { color: #60a5fa; }
+        .api-t-muted { color: #64748b; }
+
+        .api-text h2 { font-family: var(--font-display); font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem; }
+        .api-text p { color: var(--text-secondary); font-size: 1rem; line-height: 1.7; margin-bottom: 1.5rem; }
+
+        .api-pill-list { display: flex; flex-direction: column; gap: 0.625rem; }
+        .api-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .api-pill-icon {
+            width: 22px; height: 22px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        /* ── Stats Row ── */
+        .stats-section {
+            padding: 5rem 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .stats-numbers {
+            max-width: 860px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .stat-num-block { padding: 1.5rem 1rem; }
+        .stat-num-value {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.375rem;
+        }
+        .stat-num-label { font-size: 0.875rem; color: var(--text-secondary); }
+
+        /* ── Responsive Extra ── */
+        @media (max-width: 900px) {
+            .api-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+            .stats-numbers { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .stats-numbers { grid-template-columns: repeat(2, 1fr); }
+        }
+
         /* ── Particles ── */
         .particles {
             position: fixed;
@@ -779,6 +899,93 @@
         </div>
     </section>
 
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="stats-numbers">
+            <div class="stat-num-block">
+                <div class="stat-num-value">∞</div>
+                <div class="stat-num-label">Free payment links</div>
+            </div>
+            <div class="stat-num-block">
+                <div class="stat-num-value">2</div>
+                <div class="stat-num-label">Wallets supported</div>
+            </div>
+            <div class="stat-num-block">
+                <div class="stat-num-value">REST</div>
+                <div class="stat-num-label">Public API included</div>
+            </div>
+            <div class="stat-num-block">
+                <div class="stat-num-value">0₱</div>
+                <div class="stat-num-label">Setup cost</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Section -->
+    <section class="api-section" id="api">
+        <div class="api-layout">
+            <!-- Code Block -->
+            <div class="api-code-block">
+                <div class="api-code-bar">
+                    <div class="api-code-dot" style="background:#ef4444"></div>
+                    <div class="api-code-dot" style="background:#f59e0b"></div>
+                    <div class="api-code-dot" style="background:#10b981"></div>
+                    <span style="font-size:0.75rem;color:#4a5568;margin-left:0.5rem">create-link.sh</span>
+                </div>
+                <pre class="api-code-pre"><code><span class="api-t-comment"># Create a payment link in one request</span>
+<span class="api-t-method">curl</span> -X POST https://yourapp.replit.app/api/v1/links \
+  -H <span class="api-t-str">"Authorization: Bearer qrp_your_key"</span> \
+  -H <span class="api-t-str">"Content-Type: application/json"</span> \
+  -d <span class="api-t-str">'{
+    "title": "Order #4291",
+    "amount": <span class="api-t-num">1500</span>,
+    "description": "Premium package"
+  }'</span>
+
+<span class="api-t-comment"># Response</span>
+{
+  <span class="api-t-key">"slug"</span>: <span class="api-t-str">"order-4291"</span>,
+  <span class="api-t-key">"payment_url"</span>: <span class="api-t-str">"https://.../pay/order-4291"</span>,
+  <span class="api-t-key">"amount"</span>: <span class="api-t-num">1500</span>,
+  <span class="api-t-key">"status"</span>: <span class="api-t-str">"active"</span>
+}</code></pre>
+            </div>
+
+            <!-- Text -->
+            <div class="api-text">
+                <div class="section-label">Developer API</div>
+                <h2>Build Payment Flows Programmatically</h2>
+                <p>Use our REST API to integrate QR payment links directly into your app, e-commerce store, or ordering system — without touching the dashboard.</p>
+                <div class="api-pill-list">
+                    <div class="api-pill">
+                        <div class="api-pill-icon">🔑</div>
+                        Bearer token auth — generate keys from your dashboard
+                    </div>
+                    <div class="api-pill">
+                        <div class="api-pill-icon">⚡</div>
+                        Create, list, and delete payment links via API
+                    </div>
+                    <div class="api-pill">
+                        <div class="api-pill-icon">📦</div>
+                        JSON responses — works with any language or framework
+                    </div>
+                    <div class="api-pill">
+                        <div class="api-pill-icon">🛡️</div>
+                        Rate limiting and key revocation built-in
+                    </div>
+                </div>
+                <div style="margin-top:2rem">
+                    <a href="/dashboard" class="btn-primary-glow" style="display:inline-flex">
+                        Get Your API Key
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M2 7H12M7.5 2.5L12 7L7.5 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA -->
     <section class="cta-section">
         <div class="cta-card">
@@ -896,6 +1103,34 @@
                 trigger: '.cta-section',
                 start: 'top 80%',
             },
+        });
+
+        // Stats section
+        gsap.from('.stat-num-block', {
+            opacity: 0,
+            y: 30,
+            duration: 0.55,
+            stagger: 0.1,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: '.stats-numbers', start: 'top 85%' },
+        });
+
+        // API section
+        gsap.from('.api-code-block', {
+            opacity: 0,
+            x: -40,
+            duration: 0.7,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: '.api-layout', start: 'top 80%' },
+        });
+
+        gsap.from('.api-text', {
+            opacity: 0,
+            x: 40,
+            duration: 0.7,
+            delay: 0.15,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: '.api-layout', start: 'top 80%' },
         });
     </script>
 </body>

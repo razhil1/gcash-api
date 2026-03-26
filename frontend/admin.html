@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — QRPay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        :root { --font-display: 'Plus Jakarta Sans', sans-serif; }
+        body { font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 240px;
+            min-height: 100vh;
+            background: rgba(8, 11, 22, 0.97);
+            border-right: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            text-decoration: none;
+        }
+
+        .sidebar-logo span {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar-section-label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 1.25rem 1.5rem 0.5rem;
+        }
+
+        .sidebar-nav { flex: 1; padding: 0.5rem 0.75rem; }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.625rem 0.875rem;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .sidebar-link:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+        .sidebar-link.active { background: rgba(59,130,246,0.12); color: #60a5fa; }
+        .sidebar-link .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+        .sidebar-bottom {
+            padding: 1rem 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.625rem 0.875rem;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .sidebar-user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .sidebar-user-info { flex: 1; min-width: 0; }
+        .sidebar-user-email { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-user-role { font-size: 0.6875rem; color: var(--neon-blue); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* ── Main ── */
+        .admin-main {
+            flex: 1;
+            margin-left: 240px;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .admin-page { display: none; }
+        .admin-page.active { display: block; }
+
+        .page-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        /* ── Stats Grid ── */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+
+        .stat-block {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .stat-block-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-block-value { font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; }
+        .stat-block-sub { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; }
+
+        /* ── Table ── */
+        .admin-table-wrap {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .admin-table { width: 100%; border-collapse: collapse; }
+        .admin-table th {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            padding: 0.875rem 1.25rem;
+            text-align: left;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .admin-table td {
+            padding: 0.875rem 1.25rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            vertical-align: middle;
+        }
+
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* ── Search / Filter bar ── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-search {
+            flex: 1;
+            min-width: 200px;
+            max-width: 320px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 0.5rem 0.875rem;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .toolbar-search:focus { border-color: rgba(59,130,246,0.4); }
+        .toolbar-search::placeholder { color: var(--text-muted); }
+
+        .toolbar-select {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 0.5rem 0.875rem;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* ── Revenue chart mini ── */
+        .revenue-chart-mini {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 80px;
+        }
+
+        .rev-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
+            transition: opacity 0.2s;
+            position: relative;
+        }
+
+        .rev-bar:hover { opacity: 0.75; }
+
+        /* ── Pagination ── */
+        .admin-pagination { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.05); }
+        .admin-pagination span { font-size: 0.8125rem; color: var(--text-muted); }
+        .admin-pagination-btns { display: flex; gap: 0.5rem; }
+        .admin-pagination-btn {
+            padding: 0.375rem 0.875rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .admin-pagination-btn:hover:not(:disabled) { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .admin-pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ── Mobile sidebar ── */
+        .sidebar-toggle { display: none; }
+
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+            .sidebar.open { transform: translateX(0); }
+            .admin-main { margin-left: 0; }
+            .sidebar-toggle { display: flex; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 540px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .admin-main { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <a href="/" class="sidebar-logo">
+            <svg width="28" height="28" viewBox="0 0 34 34" fill="none">
+                <rect width="34" height="34" rx="10" fill="url(#adm-logo)"/>
+                <rect x="7" y="7" width="8" height="8" rx="1.5" fill="white"/>
+                <rect x="9" y="9" width="4" height="4" rx="0.5" fill="url(#adm-logo)"/>
+                <rect x="19" y="7" width="8" height="8" rx="1.5" fill="white"/>
+                <rect x="21" y="9" width="4" height="4" rx="0.5" fill="url(#adm-logo)"/>
+                <rect x="7" y="19" width="8" height="8" rx="1.5" fill="white"/>
+                <rect x="9" y="21" width="4" height="4" rx="0.5" fill="url(#adm-logo)"/>
+                <rect x="19" y="19" width="3.5" height="3.5" rx="1" fill="white" opacity="0.9"/>
+                <rect x="23.5" y="19" width="3.5" height="3.5" rx="1" fill="white" opacity="0.7"/>
+                <rect x="19" y="23.5" width="3.5" height="3.5" rx="1" fill="white" opacity="0.7"/>
+                <rect x="23.5" y="23.5" width="3.5" height="3.5" rx="1" fill="white" opacity="0.5"/>
+                <defs>
+                    <linearGradient id="adm-logo" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span>QRPay Admin</span>
+        </a>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Overview</div>
+            <button class="sidebar-link active" onclick="showPage('overview')">
+                <span class="icon">📊</span> Dashboard
+            </button>
+
+            <div class="sidebar-section-label">Manage</div>
+            <button class="sidebar-link" onclick="showPage('users')">
+                <span class="icon">👥</span> Users
+            </button>
+            <button class="sidebar-link" onclick="showPage('transactions')">
+                <span class="icon">💳</span> Transactions
+            </button>
+            <button class="sidebar-link" onclick="showPage('links')">
+                <span class="icon">🔗</span> Payment Links
+            </button>
+            <button class="sidebar-link" onclick="showPage('wallets')">
+                <span class="icon">📱</span> QR Wallets
+            </button>
+
+            <div class="sidebar-section-label">Account</div>
+            <a href="/dashboard" class="sidebar-link">
+                <span class="icon">🏠</span> User Dashboard
+            </a>
+            <button class="sidebar-link" onclick="logout()">
+                <span class="icon">🚪</span> Logout
+            </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar" id="adminAvatar">A</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-email" id="adminEmail">Loading...</div>
+                    <div class="sidebar-user-role">Admin</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+
+        <!-- ══ Overview Page ══ -->
+        <div class="admin-page active" id="page-overview">
+            <div class="mb-3">
+                <h1 class="page-title">Dashboard Overview</h1>
+                <p class="text-secondary text-sm">System-wide stats and activity</p>
+            </div>
+
+            <div class="stats-row" id="overviewStats">
+                <div class="stat-block">
+                    <div class="stat-block-label">Total Revenue</div>
+                    <div class="stat-block-value" id="ov-revenue">₱0</div>
+                    <div class="stat-block-sub" id="ov-revenue-7d">Last 7 days: ₱0</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-block-label">Transactions</div>
+                    <div class="stat-block-value" id="ov-txns">0</div>
+                    <div class="stat-block-sub" id="ov-txns-pending">Pending: 0</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-block-label">Users</div>
+                    <div class="stat-block-value" id="ov-users">0</div>
+                    <div class="stat-block-sub" id="ov-users-new">New this week: 0</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-block-label">Payment Links</div>
+                    <div class="stat-block-value" id="ov-links">0</div>
+                    <div class="stat-block-sub" id="ov-links-active">Active: 0</div>
+                </div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="admin-table-wrap mb-3" style="padding:1.5rem;">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:700;">Revenue (Last 14 Days)</h3>
+                </div>
+                <div class="revenue-chart-mini" id="adminRevenueChart"></div>
+                <div id="adminChartLabels" style="display:flex;gap:6px;margin-top:0.5rem;"></div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div>
+                <h3 style="font-family:var(--font-display);font-size:1rem;font-weight:700;margin-bottom:1rem;">Recent Pending Transactions</h3>
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Sender</th>
+                                <th>Amount</th>
+                                <th>Reference</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTxnTable">
+                            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ Users Page ══ -->
+        <div class="admin-page" id="page-users">
+            <div class="mb-3 flex items-center justify-between flex-wrap gap-2">
+                <div>
+                    <h1 class="page-title">Users</h1>
+                    <p class="text-secondary text-sm">Manage user accounts</p>
+                </div>
+            </div>
+            <div class="toolbar">
+                <input type="text" class="toolbar-search" id="userSearch" placeholder="Search by email or name..." oninput="debounceUserSearch()">
+                <select class="toolbar-select" id="userRoleFilter" onchange="loadUsers(1)">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Links</th>
+                            <th>API Keys</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:2rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+                <div class="admin-pagination" id="usersPagination" style="display:none">
+                    <span id="usersPaginationInfo"></span>
+                    <div class="admin-pagination-btns">
+                        <button class="admin-pagination-btn" id="usersPrevBtn" onclick="loadUsers(usersCurrentPage - 1)">← Prev</button>
+                        <button class="admin-pagination-btn" id="usersNextBtn" onclick="loadUsers(usersCurrentPage + 1)">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ Transactions Page ══ -->
+        <div class="admin-page" id="page-transactions">
+            <div class="mb-3">
+                <h1 class="page-title">Transactions</h1>
+                <p class="text-secondary text-sm">Review and approve all payments</p>
+            </div>
+            <div class="toolbar">
+                <input type="text" class="toolbar-search" id="txnSearch" placeholder="Search sender or reference..." oninput="debounceTxnSearch()">
+                <select class="toolbar-select" id="txnStatusFilter" onchange="loadAdminTxns(1)">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Sender</th>
+                            <th>Amount</th>
+                            <th>Reference</th>
+                            <th>Status</th>
+                            <th>Proofs</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="txnTable">
+                        <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+                <div class="admin-pagination" id="txnsPagination" style="display:none">
+                    <span id="txnsPaginationInfo"></span>
+                    <div class="admin-pagination-btns">
+                        <button class="admin-pagination-btn" id="txnsPrevBtn" onclick="loadAdminTxns(txnsCurrentPage - 1)">← Prev</button>
+                        <button class="admin-pagination-btn" id="txnsNextBtn" onclick="loadAdminTxns(txnsCurrentPage + 1)">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ Payment Links Page ══ -->
+        <div class="admin-page" id="page-links">
+            <div class="mb-3">
+                <h1 class="page-title">Payment Links</h1>
+                <p class="text-secondary text-sm">All payment links across the system</p>
+            </div>
+            <div class="toolbar">
+                <input type="text" class="toolbar-search" id="linksSearch" placeholder="Search by title..." oninput="debounceLinksSearch()">
+                <select class="toolbar-select" id="linksStatusFilter" onchange="loadAdminLinks(1)">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="disabled">Disabled</option>
+                    <option value="expired">Expired</option>
+                </select>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Slug</th>
+                            <th>Amount</th>
+                            <th>Wallet</th>
+                            <th>Transactions</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="linksTable">
+                        <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+                <div class="admin-pagination" id="linksPagination2" style="display:none">
+                    <span id="linksPaginationInfo"></span>
+                    <div class="admin-pagination-btns">
+                        <button class="admin-pagination-btn" id="linksPrevBtn" onclick="loadAdminLinks(linksCurrentPage - 1)">← Prev</button>
+                        <button class="admin-pagination-btn" id="linksNextBtn" onclick="loadAdminLinks(linksCurrentPage + 1)">Next →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ Wallets Page ══ -->
+        <div class="admin-page" id="page-wallets">
+            <div class="mb-3">
+                <h1 class="page-title">QR Wallets</h1>
+                <p class="text-secondary text-sm">All QR wallets in the system</p>
+            </div>
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Account</th>
+                            <th>Number</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="walletsTable">
+                        <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Proof Lightbox -->
+    <div class="lightbox" id="lightbox" style="display:none" onclick="closeLightbox()">
+        <img id="lightboxImg" src="" alt="Proof">
+    </div>
+
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/utils.js"></script>
+    <script>
+        // ── Auth & Admin Guard ──
+        if (!api.isAuthenticated()) { window.location.href = '/login'; }
+        if (!api.isAdmin()) { window.location.href = '/dashboard'; }
+
+        const user = api.getUser();
+        if (user) {
+            document.getElementById('adminEmail').textContent = user.email;
+            document.getElementById('adminAvatar').textContent = (user.name || user.email)[0].toUpperCase();
+        }
+
+        function logout() {
+            api.clearToken();
+            window.location.href = '/login';
+        }
+
+        // ── Page Navigation ──
+        const pages = document.querySelectorAll('.admin-page');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const pageLoaders = {
+            overview: loadOverview,
+            users: () => loadUsers(1),
+            transactions: () => loadAdminTxns(1),
+            links: () => loadAdminLinks(1),
+            wallets: loadAdminWallets,
+        };
+
+        function showPage(name) {
+            pages.forEach(p => p.classList.remove('active'));
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            const page = document.getElementById(`page-${name}`);
+            if (page) page.classList.add('active');
+            document.querySelectorAll('.sidebar-link').forEach(l => {
+                if (l.getAttribute('onclick') === `showPage('${name}')`) l.classList.add('active');
+            });
+            if (pageLoaders[name]) pageLoaders[name]();
+        }
+
+        // ── Overview ──
+        async function loadOverview() {
+            try {
+                const stats = await api.adminGetStats();
+                document.getElementById('ov-revenue').textContent = '₱' + stats.revenue.total.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                document.getElementById('ov-revenue-7d').textContent = `Last 7 days: ₱${stats.revenue.last_7_days.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+                document.getElementById('ov-txns').textContent = stats.transactions.total;
+                document.getElementById('ov-txns-pending').textContent = `Pending: ${stats.transactions.pending}`;
+                document.getElementById('ov-users').textContent = stats.users.total;
+                document.getElementById('ov-users-new').textContent = `New this week: ${stats.users.new_7d}`;
+                document.getElementById('ov-links').textContent = stats.payment_links.total;
+                document.getElementById('ov-links-active').textContent = `Active: ${stats.payment_links.active}`;
+            } catch (err) { showToast(err.message, 'error'); }
+
+            try {
+                const chart = await api.adminGetRevenueChart(14);
+                const maxRev = Math.max(...chart.chart.map(d => d.revenue), 1);
+                const chartEl = document.getElementById('adminRevenueChart');
+                const labelsEl = document.getElementById('adminChartLabels');
+                chartEl.innerHTML = chart.chart.map(d => {
+                    const h = Math.max((d.revenue / maxRev) * 80, 4);
+                    return `<div class="rev-bar" style="height:${h}px;" title="${d.label}: ₱${d.revenue.toFixed(2)}"></div>`;
+                }).join('');
+                labelsEl.innerHTML = chart.chart.map((d, i) =>
+                    `<span style="flex:1;font-size:0.65rem;color:var(--text-muted);text-align:center;overflow:hidden">${i % 2 === 0 ? d.label : ''}</span>`
+                ).join('');
+            } catch (err) { console.error(err); }
+
+            try {
+                const pending = await api.adminGetTransactions(1, 'pending');
+                const tbody = document.getElementById('recentTxnTable');
+                if (!pending.transactions.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No pending transactions</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = pending.transactions.slice(0, 8).map(t => `
+                    <tr>
+                        <td><strong>${t.sender_name}</strong><br><span class="text-secondary" style="font-size:0.75rem">${t.sender_contact || ''}</span></td>
+                        <td style="color:var(--neon-green);font-weight:700">₱${t.amount_paid.toFixed(2)}</td>
+                        <td style="font-family:monospace;font-size:0.8rem">${t.reference_number || '—'}</td>
+                        <td style="color:var(--text-muted);font-size:0.8rem">${timeAgo(t.created_at)}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="approveAdminTxn(${t.id})">✓ Approve</button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectAdminTxn(${t.id})">✕ Reject</button>
+                            ${t.proofs && t.proofs.length > 0 ? `<img src="${t.proofs[0].file_url}" style="width:32px;height:32px;border-radius:4px;object-fit:cover;cursor:pointer;vertical-align:middle" onclick="openLightboxFn('${t.proofs[0].file_url}')">` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.error(err); }
+        }
+
+        // ── Users ──
+        let usersCurrentPage = 1;
+        let userSearchTimeout;
+
+        function debounceUserSearch() {
+            clearTimeout(userSearchTimeout);
+            userSearchTimeout = setTimeout(() => loadUsers(1), 400);
+        }
+
+        async function loadUsers(page = 1) {
+            usersCurrentPage = page;
+            const search = document.getElementById('userSearch').value;
+            const role = document.getElementById('userRoleFilter').value;
+            const tbody = document.getElementById('usersTable');
+
+            try {
+                const data = await api.adminGetUsers(page, search, role);
+                tbody.innerHTML = data.users.map(u => `
+                    <tr>
+                        <td style="color:var(--text-muted)">#${u.id}</td>
+                        <td>${u.email}</td>
+                        <td>${u.name || '—'}</td>
+                        <td>
+                            <span class="badge" style="${u.role === 'admin' ? 'background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.2)' : 'background:rgba(59,130,246,0.1);color:#93c5fd;border:1px solid rgba(59,130,246,0.15)'}">${u.role}</span>
+                        </td>
+                        <td>${u.link_count}</td>
+                        <td>${u.api_key_count}</td>
+                        <td>${u.is_active ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-disabled">Disabled</span>'}</td>
+                        <td style="color:var(--text-muted);font-size:0.8rem">${formatDateShort(u.created_at)}</td>
+                        <td>
+                            <button class="btn btn-ghost btn-sm" onclick="toggleUser(${u.id}, ${u.is_active})">${u.is_active ? 'Disable' : 'Enable'}</button>
+                            ${u.role === 'user' ? `<button class="btn btn-ghost btn-sm" onclick="makeAdmin(${u.id})">Make Admin</button>` : ''}
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:2rem;">No users found</td></tr>';
+
+                const pag = document.getElementById('usersPagination');
+                pag.style.display = data.pages > 1 ? 'flex' : 'none';
+                document.getElementById('usersPaginationInfo').textContent = `Page ${page} of ${data.pages} · ${data.total} users`;
+                document.getElementById('usersPrevBtn').disabled = page <= 1;
+                document.getElementById('usersNextBtn').disabled = page >= data.pages;
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        async function toggleUser(id, isActive) {
+            if (!confirm(`${isActive ? 'Disable' : 'Enable'} this user?`)) return;
+            try {
+                await api.adminToggleUser(id, !isActive);
+                showToast('User updated', 'success');
+                loadUsers(usersCurrentPage);
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        async function makeAdmin(id) {
+            if (!confirm('Grant admin role to this user?')) return;
+            try {
+                await api.adminUpdateRole(id, 'admin');
+                showToast('Role updated to admin', 'success');
+                loadUsers(usersCurrentPage);
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        // ── Transactions ──
+        let txnsCurrentPage = 1;
+        let txnSearchTimeout;
+
+        function debounceTxnSearch() {
+            clearTimeout(txnSearchTimeout);
+            txnSearchTimeout = setTimeout(() => loadAdminTxns(1), 400);
+        }
+
+        async function loadAdminTxns(page = 1) {
+            txnsCurrentPage = page;
+            const search = document.getElementById('txnSearch').value;
+            const status = document.getElementById('txnStatusFilter').value;
+            const tbody = document.getElementById('txnTable');
+
+            try {
+                const data = await api.adminGetTransactions(page, status, search);
+                tbody.innerHTML = data.transactions.map(t => `
+                    <tr>
+                        <td style="color:var(--text-muted)">#${t.id}</td>
+                        <td>
+                            <strong>${t.sender_name}</strong><br>
+                            <span class="text-secondary" style="font-size:0.75rem">${t.sender_contact || ''}</span>
+                        </td>
+                        <td style="color:var(--neon-green);font-weight:700">₱${t.amount_paid.toFixed(2)}</td>
+                        <td style="font-family:monospace;font-size:0.8rem">${t.reference_number || '—'}</td>
+                        <td>${getStatusBadge(t.status)}</td>
+                        <td>
+                            ${t.proofs && t.proofs.length > 0
+                                ? t.proofs.map(p => `<img src="${p.file_url}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;cursor:pointer;margin-right:2px" onclick="openLightboxFn('${p.file_url}')">`).join('')
+                                : '<span style="color:var(--text-muted);font-size:0.75rem">None</span>'
+                            }
+                        </td>
+                        <td style="color:var(--text-muted);font-size:0.8rem">${timeAgo(t.created_at)}</td>
+                        <td>
+                            ${t.status === 'pending' ? `
+                                <button class="btn btn-success btn-sm" onclick="approveAdminTxn(${t.id})">✓</button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectAdminTxn(${t.id})">✕</button>
+                            ` : '—'}
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">No transactions found</td></tr>';
+
+                const pag = document.getElementById('txnsPagination');
+                pag.style.display = data.pages > 1 ? 'flex' : 'none';
+                document.getElementById('txnsPaginationInfo').textContent = `Page ${page} of ${data.pages} · ${data.total} total`;
+                document.getElementById('txnsPrevBtn').disabled = page <= 1;
+                document.getElementById('txnsNextBtn').disabled = page >= data.pages;
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        async function approveAdminTxn(id) {
+            try {
+                await api.adminReviewTransaction(id, 'approve');
+                showToast('Transaction approved', 'success');
+                loadOverview();
+                if (document.getElementById('page-transactions').classList.contains('active')) loadAdminTxns(txnsCurrentPage);
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        async function rejectAdminTxn(id) {
+            const note = prompt('Rejection reason (optional):') || '';
+            try {
+                await api.adminReviewTransaction(id, 'reject', note);
+                showToast('Transaction rejected', 'warning');
+                loadOverview();
+                if (document.getElementById('page-transactions').classList.contains('active')) loadAdminTxns(txnsCurrentPage);
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        // ── Payment Links ──
+        let linksCurrentPage = 1;
+        let linksSearchTimeout;
+
+        function debounceLinksSearch() {
+            clearTimeout(linksSearchTimeout);
+            linksSearchTimeout = setTimeout(() => loadAdminLinks(1), 400);
+        }
+
+        async function loadAdminLinks(page = 1) {
+            linksCurrentPage = page;
+            const search = document.getElementById('linksSearch').value;
+            const status = document.getElementById('linksStatusFilter').value;
+            const tbody = document.getElementById('linksTable');
+            try {
+                const data = await api.adminGetPaymentLinks(page, status, search);
+                tbody.innerHTML = data.payment_links.map(l => `
+                    <tr>
+                        <td style="color:var(--text-muted)">#${l.id}</td>
+                        <td><strong>${l.title}</strong></td>
+                        <td><a href="/pay/${l.slug}" target="_blank" style="font-family:monospace;font-size:0.8rem;color:var(--neon-blue)">${l.slug}</a></td>
+                        <td style="color:var(--neon-green);font-weight:600">${l.amount ? '₱' + l.amount.toFixed(2) : 'Any'}</td>
+                        <td>${l.qr_wallet ? `<span class="badge ${l.qr_wallet.wallet_type === 'gcash' ? 'badge-active' : 'badge-info'}">${l.qr_wallet.wallet_type}</span>` : '—'}</td>
+                        <td>${l.transaction_count}</td>
+                        <td>${getStatusBadge(l.status)}</td>
+                        <td style="color:var(--text-muted);font-size:0.8rem">${formatDateShort(l.created_at)}</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:2rem;">No payment links</td></tr>';
+
+                const pag = document.getElementById('linksPagination2');
+                pag.style.display = data.pages > 1 ? 'flex' : 'none';
+                document.getElementById('linksPaginationInfo').textContent = `Page ${page} of ${data.pages} · ${data.total} total`;
+                document.getElementById('linksPrevBtn').disabled = page <= 1;
+                document.getElementById('linksNextBtn').disabled = page >= data.pages;
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        // ── QR Wallets ──
+        async function loadAdminWallets() {
+            const tbody = document.getElementById('walletsTable');
+            try {
+                const data = await api.request('GET', '/qr-wallets');
+                tbody.innerHTML = (data.qr_wallets || []).map(w => `
+                    <tr>
+                        <td style="color:var(--text-muted)">#${w.id}</td>
+                        <td><strong>${w.name}</strong></td>
+                        <td><span class="badge ${w.wallet_type === 'gcash' ? 'badge-active' : 'badge-info'}">${w.wallet_type}</span></td>
+                        <td>${w.account_name || '—'}</td>
+                        <td style="font-family:monospace;font-size:0.8rem">${w.account_number || '—'}</td>
+                        <td>${w.is_active ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-disabled">Disabled</span>'}</td>
+                        <td style="color:var(--text-muted);font-size:0.8rem">${formatDateShort(w.created_at)}</td>
+                    </tr>
+                `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No wallets</td></tr>';
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        // ── Lightbox ──
+        function openLightboxFn(url) {
+            document.getElementById('lightboxImg').src = url;
+            document.getElementById('lightbox').style.display = 'flex';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+
+        // ── Init ──
+        loadOverview();
+    </script>
+</body>
+</html>

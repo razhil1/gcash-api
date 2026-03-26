@@ -122,10 +122,28 @@
     <nav class="navbar">
         <div class="navbar-inner">
             <a href="/" class="navbar-brand">
-                <div class="navbar-brand-icon">💳</div>
+                <svg width="28" height="28" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+                    <rect width="34" height="34" rx="10" fill="url(#dash-logo-grad)"/>
+                    <rect x="7" y="7" width="8" height="8" rx="1.5" fill="white"/>
+                    <rect x="9" y="9" width="4" height="4" rx="0.5" fill="url(#dash-logo-grad)"/>
+                    <rect x="19" y="7" width="8" height="8" rx="1.5" fill="white"/>
+                    <rect x="21" y="9" width="4" height="4" rx="0.5" fill="url(#dash-logo-grad)"/>
+                    <rect x="7" y="19" width="8" height="8" rx="1.5" fill="white"/>
+                    <rect x="9" y="21" width="4" height="4" rx="0.5" fill="url(#dash-logo-grad)"/>
+                    <rect x="19" y="19" width="3.5" height="3.5" rx="1" fill="white" opacity="0.9"/>
+                    <rect x="23.5" y="19" width="3.5" height="3.5" rx="1" fill="white" opacity="0.7"/>
+                    <rect x="19" y="23.5" width="3.5" height="3.5" rx="1" fill="white" opacity="0.7"/>
+                    <rect x="23.5" y="23.5" width="3.5" height="3.5" rx="1" fill="white" opacity="0.5"/>
+                    <defs>
+                        <linearGradient id="dash-logo-grad" x1="0" y1="0" x2="34" y2="34" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
                 <span>QRPay</span>
             </a>
             <div class="navbar-actions">
+                <a href="/admin" class="btn btn-ghost btn-sm" id="adminPanelLink" style="display:none">Admin Panel</a>
                 <span class="text-sm text-secondary" id="userEmail"></span>
                 <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
             </div>
@@ -177,6 +195,8 @@
             <button class="tab-btn active" data-tab="tab-transactions">📋 Transactions</button>
             <button class="tab-btn" data-tab="tab-links">🔗 Payment Links</button>
             <button class="tab-btn" data-tab="tab-wallets">📱 QR Wallets</button>
+            <button class="tab-btn" data-tab="tab-apikeys">🔑 API Keys</button>
+            <button class="tab-btn" data-tab="tab-settings">⚙️ Settings</button>
         </div>
 
         <!-- Tab: Transactions -->
@@ -216,6 +236,93 @@
                 <button class="btn btn-primary btn-sm" onclick="openModal('createWalletModal')">+ Add Wallet</button>
             </div>
             <div class="wallet-grid" id="walletGrid"></div>
+        </div>
+
+        <!-- Tab: API Keys -->
+        <div class="tab-content" id="tab-apikeys">
+            <div class="section-header">
+                <div>
+                    <h2>API Keys</h2>
+                    <p class="text-secondary text-sm mt-1">Use these keys to create payment links programmatically via the REST API.</p>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="openModal('createApiKeyModal')">+ Generate Key</button>
+            </div>
+
+            <!-- API Quick Docs -->
+            <div class="glass-card-static mb-3" style="border-left: 3px solid var(--neon-blue);">
+                <h4 class="mb-2" style="font-size:0.9375rem;">Fast Payment Link — API Usage</h4>
+                <p class="text-secondary text-sm mb-2">Create a payment link in one HTTP request:</p>
+                <div id="apiDocsCode" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:1rem;font-family:monospace;font-size:0.8rem;line-height:1.7;overflow-x:auto;color:#e2e8f0;">
+                    <span style="color:#64748b"># POST to create a payment link instantly</span><br>
+                    curl -X POST <span id="apiBaseUrlDisplay"></span>/api/v1/links \<br>
+                    &nbsp;&nbsp;-H <span style="color:#86efac">"Authorization: Bearer YOUR_KEY"</span> \<br>
+                    &nbsp;&nbsp;-H <span style="color:#86efac">"Content-Type: application/json"</span> \<br>
+                    &nbsp;&nbsp;-d <span style="color:#86efac">'{"title": "Order #123", "amount": 500}'</span>
+                </div>
+                <div class="mt-2 flex gap-sm flex-wrap">
+                    <span class="badge" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.2);">POST /api/v1/links</span>
+                    <span class="badge" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.2);">GET /api/v1/links</span>
+                    <span class="badge" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.2);">GET /api/v1/links/:slug</span>
+                    <span class="badge" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.2);">DELETE /api/v1/links/:slug</span>
+                    <span class="badge" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.2);">GET /api/v1/me</span>
+                </div>
+            </div>
+
+            <div class="glass-card-static" id="apiKeysList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔑</div>
+                    <p>No API keys yet. Generate one to get started.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Settings -->
+        <div class="tab-content" id="tab-settings">
+            <div class="section-header">
+                <h2>Account Settings</h2>
+            </div>
+            <div style="max-width:480px;display:flex;flex-direction:column;gap:1.5rem;">
+                <!-- Profile -->
+                <div class="glass-card-static">
+                    <h4 class="mb-3">Profile</h4>
+                    <div class="form-group">
+                        <label class="form-label">Display Name</label>
+                        <input type="text" class="form-input" id="settingsName" placeholder="Your name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="settingsEmail" disabled style="opacity:0.5">
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save Profile</button>
+                </div>
+
+                <!-- Change Password -->
+                <div class="glass-card-static">
+                    <h4 class="mb-3">Change Password</h4>
+                    <form id="changePasswordForm">
+                        <div class="form-group">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-input" id="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-input" id="newPassword" minlength="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-input" id="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Change Password</button>
+                    </form>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="glass-card-static" style="border-color:rgba(239,68,68,0.2);">
+                    <h4 class="mb-2" style="color:var(--neon-red)">Account Info</h4>
+                    <p class="text-secondary text-sm mb-2">Your account role and status.</p>
+                    <div id="accountInfoDisplay" class="text-sm text-secondary">Loading...</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -307,6 +414,36 @@
                 <button class="modal-close" onclick="closeModal('viewTxnModal')">✕</button>
             </div>
             <div id="txnDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- ═══ CREATE API KEY MODAL ═══ -->
+    <div class="modal-overlay" id="createApiKeyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Generate API Key</h3>
+                <button class="modal-close" onclick="closeModal('createApiKeyModal')">✕</button>
+            </div>
+            <form id="apiKeyForm">
+                <div class="form-group">
+                    <label class="form-label">Key Name</label>
+                    <input type="text" class="form-input" id="apiKeyName" placeholder="e.g. Production, My App" required>
+                </div>
+                <p class="text-secondary text-sm mb-3">The full key will only be shown once. Store it securely.</p>
+                <button type="submit" class="btn btn-primary btn-block" id="apiKeySubmitBtn">Generate Key</button>
+            </form>
+            <!-- New key reveal -->
+            <div id="newKeyReveal" style="display:none">
+                <div class="form-group">
+                    <label class="form-label" style="color:var(--neon-green)">Your New API Key — Copy it now!</label>
+                    <div class="copy-url">
+                        <input type="text" id="newKeyValue" readonly style="font-family:monospace;font-size:0.8125rem;">
+                        <button class="btn btn-primary btn-sm" onclick="copyApiKey()">📋 Copy</button>
+                    </div>
+                </div>
+                <p class="text-secondary text-sm">This key will not be shown in full again. Store it in a safe place.</p>
+                <button class="btn btn-ghost btn-sm mt-2" onclick="closeModal('createApiKeyModal');loadApiKeys()">Done</button>
+            </div>
         </div>
     </div>
 
@@ -708,12 +845,132 @@
         });
 
         // ══════════════════════════════════════════
+        // API KEYS
+        // ══════════════════════════════════════════
+        async function loadApiKeys() {
+            const list = document.getElementById('apiKeysList');
+            try {
+                const data = await api.listApiKeys();
+                if (!data.api_keys.length) {
+                    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔑</div><p>No API keys yet. Generate one to get started.</p></div>`;
+                    return;
+                }
+                list.innerHTML = data.api_keys.map(k => `
+                    <div class="txn-row">
+                        <div style="flex:1;min-width:0">
+                            <div class="txn-sender">${k.name}</div>
+                            <div class="txn-detail" style="font-family:monospace;font-size:0.8rem">${k.key}</div>
+                            <div class="txn-detail">
+                                ${k.request_count} requests ·
+                                Created ${timeAgo(k.created_at)} ·
+                                ${k.last_used_at ? 'Last used ' + timeAgo(k.last_used_at) : 'Never used'}
+                            </div>
+                        </div>
+                        <span class="badge ${k.is_active ? 'badge-active' : 'badge-disabled'}">${k.is_active ? 'Active' : 'Revoked'}</span>
+                        ${k.is_active ? `<button class="btn btn-danger btn-sm" onclick="revokeKey(${k.id})">Revoke</button>` : ''}
+                    </div>
+                `).join('');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function revokeKey(id) {
+            if (!confirm('Revoke this API key? Any applications using it will stop working.')) return;
+            try {
+                await api.revokeApiKey(id);
+                showToast('API key revoked', 'warning');
+                loadApiKeys();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function copyApiKey() {
+            const val = document.getElementById('newKeyValue').value;
+            navigator.clipboard.writeText(val).then(() => showToast('API key copied!', 'success'));
+        }
+
+        document.getElementById('apiKeyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('apiKeySubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Generating...';
+            try {
+                const name = document.getElementById('apiKeyName').value.trim();
+                const data = await api.createApiKey(name);
+                document.getElementById('apiKeyForm').style.display = 'none';
+                document.getElementById('newKeyReveal').style.display = '';
+                document.getElementById('newKeyValue').value = data.api_key.key;
+                showToast('API key generated!', 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Generate Key';
+            }
+        });
+
+        // Reset modal on close
+        document.getElementById('createApiKeyModal').addEventListener('click', (e) => {
+            if (e.target.id === 'createApiKeyModal') {
+                document.getElementById('apiKeyForm').style.display = '';
+                document.getElementById('apiKeyForm').reset();
+                document.getElementById('newKeyReveal').style.display = 'none';
+            }
+        });
+
+        // Set API base URL in docs
+        document.getElementById('apiBaseUrlDisplay').textContent = window.location.origin;
+
+        // ══════════════════════════════════════════
+        // SETTINGS
+        // ══════════════════════════════════════════
+        function loadSettings() {
+            const u = api.getUser();
+            if (u) {
+                document.getElementById('settingsName').value = u.name || '';
+                document.getElementById('settingsEmail').value = u.email || '';
+                document.getElementById('accountInfoDisplay').innerHTML =
+                    `Role: <strong>${u.role}</strong> · Account ID: <strong>#${u.id}</strong> · Joined: <strong>${formatDateShort(u.created_at)}</strong>`;
+            }
+        }
+
+        async function saveProfile() {
+            showToast('Profile update coming soon', 'info');
+        }
+
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPw = document.getElementById('newPassword').value;
+            const confirmPw = document.getElementById('confirmPassword').value;
+            if (newPw !== confirmPw) {
+                showToast('New passwords do not match', 'error');
+                return;
+            }
+            try {
+                await api.changePassword(document.getElementById('currentPassword').value, newPw);
+                showToast('Password changed successfully!', 'success');
+                e.target.reset();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        });
+
+        // ══════════════════════════════════════════
         // INIT
         // ══════════════════════════════════════════
+        // Show admin panel link for admin users
+        if (api.isAdmin()) {
+            document.getElementById('adminPanelLink').style.display = '';
+        }
+
         loadStats();
         loadTransactions();
         loadPaymentLinks();
         loadWallets();
+        loadApiKeys();
+        loadSettings();
 
         // GSAP entrance
         gsap.from('.page-header', { opacity: 0, y: -20, duration: 0.5 });

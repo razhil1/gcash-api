@@ -36,6 +36,11 @@ class ApiClient {
         return !!this.token;
     }
 
+    isAdmin() {
+        const user = this.getUser();
+        return user && user.role === 'admin';
+    }
+
     async request(method, endpoint, data = null, isFormData = false) {
         const url = `${API_BASE}${endpoint}`;
         const headers = {};
@@ -79,7 +84,7 @@ class ApiClient {
         }
     }
 
-    // Auth
+    // ── Auth ──
     async login(email, password) {
         const result = await this.request('POST', '/auth/login', { email, password });
         this.setToken(result.token);
@@ -98,43 +103,47 @@ class ApiClient {
         return this.request('GET', '/auth/me');
     }
 
-    // Payment Links
+    async changePassword(currentPassword, newPassword) {
+        return this.request('POST', '/auth/change-password', {
+            current_password: currentPassword,
+            new_password: newPassword,
+        });
+    }
+
+    // ── User Stats & Data ──
+    async getStats() {
+        return this.request('GET', '/user/stats');
+    }
+
+    async getTransactions(page = 1, status = '') {
+        const params = new URLSearchParams({ page, per_page: 20 });
+        if (status) params.set('status', status);
+        return this.request('GET', `/user/transactions?${params}`);
+    }
+
     async getPaymentLinks(page = 1, status = '') {
         const params = new URLSearchParams({ page, per_page: 20 });
         if (status) params.set('status', status);
-        return this.request('GET', `/payments?${params}`);
+        return this.request('GET', `/user/payment-links?${params}`);
     }
 
     async createPaymentLink(data) {
-        return this.request('POST', '/payments', data);
-    }
-
-    async getPaymentLink(id) {
-        return this.request('GET', `/payments/${id}`);
+        return this.request('POST', '/user/payment-links', data);
     }
 
     async updatePaymentLink(id, data) {
-        return this.request('PUT', `/payments/${id}`, data);
+        return this.request('PUT', `/user/payment-links/${id}`, data);
     }
 
     async deletePaymentLink(id) {
-        return this.request('DELETE', `/payments/${id}`);
+        return this.request('DELETE', `/user/payment-links/${id}`);
     }
 
-    // Public payment link
-    async getPublicPaymentLink(slug) {
-        return this.request('GET', `/payments/public/${slug}`);
-    }
-
-    async submitPayment(slug, data) {
-        return this.request('POST', `/payments/public/${slug}/submit`, data);
-    }
-
-    // QR Wallets
     async getQrWallets() {
-        return this.request('GET', '/qr-wallets');
+        return this.request('GET', '/user/wallets');
     }
 
+    // ── QR Wallets ──
     async createQrWallet(formData) {
         return this.request('POST', '/qr-wallets', formData, true);
     }
@@ -147,32 +156,88 @@ class ApiClient {
         return this.request('DELETE', `/qr-wallets/${id}`);
     }
 
-    // Transactions
-    async getTransactions(page = 1, status = '', linkId = null) {
-        const params = new URLSearchParams({ page, per_page: 20 });
-        if (status) params.set('status', status);
-        if (linkId) params.set('link_id', linkId);
-        return this.request('GET', `/transactions?${params}`);
-    }
-
+    // ── Transactions (admin actions) ──
     async approveTransaction(id, note = '') {
-        return this.request('POST', `/transactions/${id}/approve`, { note });
+        return this.request('POST', `/admin/transactions/${id}/review`, { action: 'approve', note });
     }
 
     async rejectTransaction(id, note = '') {
-        return this.request('POST', `/transactions/${id}/reject`, { note });
+        return this.request('POST', `/admin/transactions/${id}/review`, { action: 'reject', note });
     }
 
-    // Stats
-    async getStats() {
-        return this.request('GET', '/payments/stats');
+    // ── Public Payment (no auth) ──
+    async getPublicPaymentLink(slug) {
+        return this.request('GET', `/payments/public/${slug}`);
     }
 
-    // Uploads
+    async submitPayment(slug, data) {
+        return this.request('POST', `/payments/public/${slug}/submit`, data);
+    }
+
+    // ── Uploads ──
     async uploadProof(transactionId, file) {
         const formData = new FormData();
         formData.append('file', file);
         return this.request('POST', `/uploads/proof/${transactionId}`, formData, true);
+    }
+
+    // ── API Keys ──
+    async listApiKeys() {
+        return this.request('GET', '/keys');
+    }
+
+    async createApiKey(name) {
+        return this.request('POST', '/keys', { name });
+    }
+
+    async revokeApiKey(id) {
+        return this.request('DELETE', `/keys/${id}`);
+    }
+
+    async renameApiKey(id, name) {
+        return this.request('PUT', `/keys/${id}/name`, { name });
+    }
+
+    // ── Admin ──
+    async adminGetStats() {
+        return this.request('GET', '/admin/stats');
+    }
+
+    async adminGetUsers(page = 1, search = '', role = '') {
+        const params = new URLSearchParams({ page, per_page: 20 });
+        if (search) params.set('q', search);
+        if (role) params.set('role', role);
+        return this.request('GET', `/admin/users?${params}`);
+    }
+
+    async adminToggleUser(id, isActive) {
+        return this.request('POST', `/admin/users/${id}/toggle`, { is_active: isActive });
+    }
+
+    async adminUpdateRole(id, role) {
+        return this.request('PUT', `/admin/users/${id}/role`, { role });
+    }
+
+    async adminGetTransactions(page = 1, status = '', search = '') {
+        const params = new URLSearchParams({ page, per_page: 20 });
+        if (status) params.set('status', status);
+        if (search) params.set('q', search);
+        return this.request('GET', `/admin/transactions?${params}`);
+    }
+
+    async adminReviewTransaction(id, action, note = '') {
+        return this.request('POST', `/admin/transactions/${id}/review`, { action, note });
+    }
+
+    async adminGetRevenueChart(days = 7) {
+        return this.request('GET', `/admin/revenue/chart?days=${days}`);
+    }
+
+    async adminGetPaymentLinks(page = 1, status = '', search = '') {
+        const params = new URLSearchParams({ page, per_page: 20 });
+        if (status) params.set('status', status);
+        if (search) params.set('q', search);
+        return this.request('GET', `/admin/payment-links?${params}`);
     }
 }
 

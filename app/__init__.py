@@ -59,12 +59,20 @@ def create_app(config_name=None):
     from app.routes.uploads import uploads_bp
     from app.routes.qr_wallets import qr_wallets_bp
     from app.routes.transactions import transactions_bp
+    from app.routes.api_keys import api_keys_bp
+    from app.routes.public_api import public_api_bp
+    from app.routes.admin import admin_bp
+    from app.routes.user import user_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(payments_bp, url_prefix='/api/payments')
     app.register_blueprint(uploads_bp, url_prefix='/api/uploads')
     app.register_blueprint(qr_wallets_bp, url_prefix='/api/qr-wallets')
     app.register_blueprint(transactions_bp, url_prefix='/api/transactions')
+    app.register_blueprint(api_keys_bp, url_prefix='/api/keys')
+    app.register_blueprint(public_api_bp, url_prefix='/api/v1')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(user_bp, url_prefix='/api/user')
 
     # Serve uploaded files
     @app.route('/uploads/<path:filename>')
@@ -94,6 +102,11 @@ def create_app(config_name=None):
     @app.route('/assets/<path:filename>')
     def serve_assets(filename):
         return send_from_directory(os.path.join(frontend_dir, 'assets'), filename)
+
+    @app.route('/admin')
+    @app.route('/admin/')
+    def serve_admin():
+        return send_from_directory(frontend_dir, 'admin.html')
 
     # Create database tables
     with app.app_context():
