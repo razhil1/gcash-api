@@ -5,10 +5,7 @@ from app.extensions import db, jwt, limiter
 
 def create_app(config_name=None):
     """Application factory."""
-    # Use /tmp for instance path on Vercel to avoid Read-only filesystem errors
-    instance_path = '/tmp' if os.environ.get('VERCEL') == '1' else None
-    
-    app = Flask(__name__, static_folder=None, instance_path=instance_path)
+    app = Flask(__name__, static_folder=None)
 
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'development')
@@ -34,7 +31,7 @@ def create_app(config_name=None):
         identity = jwt_data["sub"]
         return User.query.get(int(identity))
 
-    # JWT Error Handlers for debugging 422s
+    # JWT Error Handlers
     @jwt.invalid_token_loader
     def invalid_token_callback(error_string):
         app.logger.error(f"Invalid Token: {error_string}")
@@ -51,16 +48,10 @@ def create_app(config_name=None):
             'msg': error_string
         }), 401
 
-    # Ensure storage folders exist (Safe for Vercel if pointed to /tmp)
-    try:
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'qr_codes'), exist_ok=True)
-        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'proofs'), exist_ok=True)
-    except OSError as e:
-        if os.environ.get('VERCEL') == '1':
-            print(f"⚠️ Warning: Could not create directories in production: {e}")
-        else:
-            raise
+    # Ensure storage folders exist
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'qr_codes'), exist_ok=True)
+    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'proofs'), exist_ok=True)
 
     # Register API blueprints
     from app.routes.auth import auth_bp
