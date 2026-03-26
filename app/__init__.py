@@ -5,13 +5,17 @@ from app.extensions import db, jwt, limiter
 
 def create_app(config_name=None):
     """Application factory."""
-    app = Flask(__name__, static_folder=None)
+    # Use /tmp for instance path on Vercel to avoid Read-only filesystem errors
+    instance_path = '/tmp' if os.environ.get('VERCEL') == '1' else None
+    
+    app = Flask(__name__, static_folder=None, instance_path=instance_path)
 
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'development')
 
     from app.config import config
-    app.config.from_object(config.get(config_name, config['default']))
+    app_config = config.get(config_name, config['default'])
+    app.config.from_object(app_config)
 
     # Initialize extensions
     db.init_app(app)
@@ -47,10 +51,16 @@ def create_app(config_name=None):
             'msg': error_string
         }), 401
 
-    # Ensure storage folders exist
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'qr_codes'), exist_ok=True)
-    os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'proofs'), exist_ok=True)
+    # Ensure storage folders exist (Safe for Vercel if pointed to /tmp)
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'qr_codes'), exist_ok=True)
+        os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'proofs'), exist_ok=True)
+    except OSError as e:
+        if os.environ.get('VERCEL') == '1':
+            print(f"⚠️ Warning: Could not create directories in production: {e}")
+        else:
+            raise
 
     # Register API blueprints
     from app.routes.auth import auth_bp

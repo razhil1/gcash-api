@@ -21,7 +21,8 @@ class Config:
     PAYMONGO_WEBHOOK_SECRET = os.getenv('PAYMONGO_WEBHOOK_SECRET', '')
 
     # Uploads
-    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', 'uploads')
+    # Use /tmp for writable storage on Vercel
+    UPLOAD_FOLDER = '/tmp/uploads' if os.environ.get('VERCEL') == '1' else os.getenv('UPLOAD_FOLDER', 'uploads')
     MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 5 * 1024 * 1024))
 
     FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5500')
