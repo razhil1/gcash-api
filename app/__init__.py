@@ -37,7 +37,7 @@ def create_app(config_name=None):
         return jsonify({
             'error': 'Invalid token',
             'msg': error_string
-        }), 422
+        }), 401
 
     @jwt.unauthorized_loader
     def unauthorized_token_callback(error_string):
