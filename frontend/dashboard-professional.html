@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCash Pro Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .dashboard {
+            padding: 20px;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-size: 1.25rem;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .icon {
+            font-size: 48px;
+            color: #007bff;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard container">
+        <h1 class="text-center my-4">GCash Pro Dashboard</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="icon fas fa-wallet"></i>
+                        <br/>
+                        Total Revenue
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">$10,000</h5>
+                        <p class="card-text">Total revenue generated this month.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="icon fas fa-users"></i>
+                        <br/>
+                        Active Users
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">1,250</h5>
+                        <p class="card-text">Number of active users.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="icon fas fa-chart-line"></i>
+                        <br/>
+                        Growth Rate
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">15%</h5>
+                        <p class="card-text">Monthly growth rate.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 GCash Pro. All rights reserved.</p>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
